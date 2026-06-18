@@ -1,0 +1,45 @@
+game:
+
+  title: Principal Simulator
+
+school:
+
+  name: Riverside High School
+
+day: 1
+
+stats:
+
+  budget: 100000
+
+  reputation: 75
+
+  student_happiness: 80
+
+  teacher_morale: 80
+
+events:
+
+  - Bus Delay
+
+  - Leaky Ceiling
+
+  - School Assembly
+
+  - Senior Prank
+
+actions:
+
+  - Inspect Cafeteria
+
+  - Repair Facilities
+
+  - Meet Parents
+
+win_condition:
+
+  days: 30
+
+lose_condition:
+
+  reputation: 0
