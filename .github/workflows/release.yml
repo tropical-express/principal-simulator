@@ -3,7 +3,10 @@ name: Build & Release Principal Simulator
 on:
   push:
     tags:
-      - "v*.*.*"   # releases only when you push tags like v0.1.0
+      - "v*.*.*"
+
+permissions:
+  contents: write  
 
 jobs:
   build:
@@ -13,9 +16,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # -----------------------------
-      # NODE + PNPM SETUP
-      # -----------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -32,65 +32,45 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # -----------------------------
-      # BUILD ELECTRON APP
-      # -----------------------------
       - name: Build Electron app
         run: pnpm run dist
 
-      # -----------------------------
-      # CLEAN RELEASE PACKAGE (TGZ)
-      # -----------------------------
+      # ---------------- CLEAN TGZ ----------------
       - name: Create clean TGZ release package
         shell: pwsh
         run: |
           $releaseDir = "release"
           $tgzPath = "dist\principal-simulator-win-x64.tgz"
 
-          if (Test-Path $releaseDir) {
-            Remove-Item $releaseDir -Recurse -Force
-          }
-
+          Remove-Item $releaseDir -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory -Path $releaseDir | Out-Null
 
-          # Only real runtime build
-          Copy-Item -Path "dist\win-unpacked\*" -Destination $releaseDir -Recurse
+          Copy-Item "dist\win-unpacked\*" $releaseDir -Recurse
 
-          # Optional metadata
           if (Test-Path "README.md") { Copy-Item README.md $releaseDir }
           if (Test-Path "LICENSE") { Copy-Item LICENSE $releaseDir }
 
           tar -czf $tgzPath -C $releaseDir .
 
-      # -----------------------------
-      # ZIP CLEAN COPY (optional but useful)
-      # -----------------------------
+      # ---------------- ZIP ----------------
       - name: Create ZIP release package
         shell: pwsh
         run: |
-          $zipPath = "dist\principal-simulator-win-x64.zip"
-          Compress-Archive -Path "release\*" -DestinationPath $zipPath -Force
+          Compress-Archive -Path "release\*" -DestinationPath "dist\principal-simulator-win-x64.zip" -Force
 
-      # -----------------------------
-      # SHA256 CHECKSUMS
-      # -----------------------------
+      # ---------------- SHA256 ----------------
       - name: Generate SHA256SUMS
         shell: pwsh
         run: |
           $files = Get-ChildItem dist -File
-          $out = @()
-
-          foreach ($f in $files) {
-            $hash = Get-FileHash $f.FullName -Algorithm SHA256
-            $out += "$($hash.Hash)  $($f.Name)"
+          $out = foreach ($f in $files) {
+            $h = Get-FileHash $f.FullName -Algorithm SHA256
+            "$($h.Hash)  $($f.Name)"
           }
+          $out | Out-File dist\SHA256SUMS.txt -Encoding utf8
 
-          $out | Out-File -Encoding utf8 dist\SHA256SUMS.txt
-
-      # -----------------------------
-      # GITHUB RELEASE
-      # -----------------------------
-      - name: Create GitHub Release
+      # ---------------- GITHUB RELEASE ----------------
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
@@ -98,14 +78,3 @@ jobs:
             dist/*.zip
             dist/*.tgz
             dist/SHA256SUMS.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # -----------------------------
-      # UPLOAD ARTIFACTS (backup)
-      # -----------------------------
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: principal-simulator-release
-          path: dist
