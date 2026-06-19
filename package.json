@@ -1,73 +1,49 @@
 {
   "name": "principal-simulator",
-
   "productName": "Principal Simulator",
-
   "version": "0.1.0",
-
   "description": "A simple high school management simulator.",
-
   "main": "electron/main.js",
-
   "author": "Your Name",
-
   "license": "GPL-3.0",
 
   "scripts": {
     "start": "electron .",
-
     "dev": "electron .",
-
+    "clean": "rimraf dist",
     "pack": "electron-builder --dir",
-
-    "dist": "electron-builder"
+    "dist": "electron-builder --publish=never"
   },
 
   "devDependencies": {
-    "electron": "^39.0.0",
-
-    "electron-builder": "^26.0.12"
+    "electron": "39.8.10",
+    "electron-builder": "^26.15.3",
+    "rimraf": "^6.0.0"
   },
 
   "build": {
-
     "appId": "com.principalsimulator.app",
+    "productName": "Principal Simulator",
 
     "directories": {
       "output": "dist"
     },
 
     "files": [
-
       "electron/**/*",
-
       "engine/**/*",
-
       "data/**/*",
-
       "index.html",
-
       "style.css",
-
-      "README.md",
-
       "package.json"
-
     ],
 
     "win": {
-
       "target": [
-
-        "portable",
-
         "zip",
-
-        "msi"
-
-      ]
-
+        "portable"
+      ],
+      "icon": "build/icon.ico"
     }
-
   }
 }
